@@ -5,48 +5,52 @@ using UnityEngine;
 
 public class FlyAttack : MonoBehaviour
 {
-    public GameObject patrolA;
-    public GameObject patrolB;
+    public GameObject PatrolA;
+    public GameObject PatrolB;
     
     private Rigidbody2D rb;
     private Animator animator;
     private Transform currentPoint;
-    
-    public float speed;
-    public float verticalSpeed;
-    public GameObject upperBound;
-    public GameObject lowerBound;
 
-    private float uBSinCoeff;
-    private float lBSinCoeff;
+    public float Speed;
+    public float VerticalSpeed;
+    public GameObject UpperBound;
+    public GameObject LowerBound;
+    private float amplitude;
+    private float distAB;
 
     // Start is called before the first frame update
     void Start()
     {
+        distAB = Vector3.Distance(PatrolA.transform.position, PatrolB.transform.position);
+        amplitude = 2 * (UpperBound.transform.position.y - PatrolA.transform.position.y);
         rb = GetComponent<Rigidbody2D>();
         //animator = GetComponent<Animator>();
-        currentPoint = patrolA.transform;
+        currentPoint = PatrolA.transform;
         //animator.SetBool("isRunning", true);
-        uBSinCoeff = Math.Abs(upperBound.transform.position.y - patrolA.transform.position.y);
-        lBSinCoeff = Math.Abs(patrolA.transform.position.y - lowerBound.transform.position.y);
+
+        transform.position = new Vector3(transform.position.x, currentPoint.position.y - amplitude / 4, transform.position.z);
     }
 
     // Update is called once per frame
     void Update()
     {
+        amplitude = 2 * (UpperBound.transform.position.y - PatrolA.transform.position.y);
         Vector2 point = currentPoint.position - transform.position;
+        var flyOffset = Mathf.Sin(Time.time * VerticalSpeed)
+            * (amplitude);
 
-        if (currentPoint == patrolB.transform)
+        if (currentPoint == PatrolB.transform)
         {
-            rb.velocity = new Vector2(speed, CalculateSin(patrolB.transform.position.x - transform.position.x));
+            rb.velocity = new Vector2(Speed, flyOffset);
         }
         else
         {
-            rb.velocity = new Vector2(-speed, CalculateSin(transform.position.x - patrolA.transform.position.x));
+            rb.velocity = new Vector2(-Speed, flyOffset);
         }
 
-        ChangeDirection(patrolA.transform, patrolB.transform);
-        ChangeDirection(patrolB.transform, patrolA.transform);
+        ChangeDirection(PatrolA.transform, PatrolB.transform);
+        ChangeDirection(PatrolB.transform, PatrolA.transform);
         
         //if ((Vector2.Distance(transform.position, currentPoint.position) < 0.5f) && currentPoint == patrolB.transform)
         //{
@@ -69,7 +73,12 @@ public class FlyAttack : MonoBehaviour
 
     private void ChangeDirection(Transform curDestination, Transform newDestination)
     {
-        if (Math.Abs(transform.position.x - currentPoint.position.x) < 0.5f && currentPoint == curDestination)
+        var distEnemyToNew = Vector3.Distance(transform.position, newDestination.position);
+
+        if (distEnemyToNew - distAB > 0.5f
+            && transform.position.y < curDestination.position.y
+            //&& Math.Abs(transform.position.x - currentPoint.position.x) < 0.5f 
+            && currentPoint == curDestination)
         {
             Flip();
             currentPoint = newDestination;
@@ -85,19 +94,20 @@ public class FlyAttack : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        Gizmos.DrawWireSphere(patrolA.transform.position, 0.5f);
-        Gizmos.DrawWireSphere(patrolB.transform.position, 0.5f);
-        Gizmos.DrawLine(patrolA.transform.position, patrolB.transform.position);
+        var lowerBound = PatrolA.transform.position.y - (UpperBound.transform.position.y - PatrolA.transform.position.y);
+        Gizmos.DrawWireSphere(PatrolA.transform.position, 0.5f);
+        Gizmos.DrawWireSphere(PatrolB.transform.position, 0.5f);
+        Gizmos.DrawLine(PatrolA.transform.position, PatrolB.transform.position);
         Gizmos.DrawLine(
             new Vector3(
-                patrolA.transform.position.x, upperBound.transform.position.y, patrolA.transform.position.z), 
+                PatrolA.transform.position.x, UpperBound.transform.position.y, PatrolA.transform.position.z), 
             new Vector3(
-                patrolB.transform.position.x, upperBound.transform.position.y, patrolB.transform.position.z));
+                PatrolB.transform.position.x, UpperBound.transform.position.y, PatrolB.transform.position.z));
         Gizmos.DrawLine(
             new Vector3(
-                patrolA.transform.position.x, lowerBound.transform.position.y, patrolA.transform.position.z),
+                PatrolA.transform.position.x, lowerBound, PatrolA.transform.position.z),
             new Vector3(
-                patrolB.transform.position.x, lowerBound.transform.position.y, patrolB.transform.position.z));
+                PatrolB.transform.position.x, lowerBound, PatrolB.transform.position.z));
     }
 
 }
