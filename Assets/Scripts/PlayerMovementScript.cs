@@ -35,6 +35,9 @@ public class PlayerMovement : MonoBehaviour
         {
             rb.velocity = new Vector3(rb.velocity.x, jumpForce);
         }
+
+        anim.SetBool("onGround", isGrounded());
+        //anim.SetFloat();
         
     }
 
